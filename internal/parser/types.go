@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"reflect"
 	"strconv"
+	"strings"
 	"unsafe"
 )
 
@@ -193,6 +194,10 @@ func min(x, y uint64) uint64 {
 func ParseCode(code string) (*TypeInfo, error) {
 	expr, err := ParseExpr(code)
 	if err != nil {
+		if i := strings.Index(code, "struct"); i > -1 && strings.Contains(code, "type") {
+			code = code[i:]
+			return ParseCode(code)
+		}
 		return nil, fmt.Errorf("syntax error: %s", err.Error())
 	}
 	typ, err := parseType(expr)
