@@ -94,7 +94,7 @@ func TestProcessAlreadyRotatedFiles(t *testing.T) {
 }
 
 func TestOpenNewFile(t *testing.T) {
-	test := func(bunch map[string]uint32, filename, daily_opendate string, lines, size uint64) {
+	test := func(bunch map[string]uint32, filename, dailyOpenDate string, lines, size uint64) {
 		dir := createTestFiles(bunch)
 		defer removeTestFiles(dir)
 
@@ -108,14 +108,14 @@ func TestOpenNewFile(t *testing.T) {
 		}
 		defer w.closeCurrentFile()
 
-		if w.maxlines_curlines != lines {
-			t.Errorf("maxlines_curlines expected %d, got %d", lines, w.maxlines_curlines)
+		if w.maxlinesCurlines != lines {
+			t.Errorf("maxlinesCurlines expected %d, got %d", lines, w.maxlinesCurlines)
 		}
-		if w.maxsize_cursize != size {
-			t.Errorf("maxsize_cursize expected %d, got %d", size, w.maxsize_cursize)
+		if w.maxsizeCursize != size {
+			t.Errorf("maxsizeCursize expected %d, got %d", size, w.maxsizeCursize)
 		}
-		if w.daily_opendate != daily_opendate {
-			t.Errorf("daily_opendate expected '%s', got '%s'", daily_opendate, w.daily_opendate)
+		if w.dailyOpenDate != dailyOpenDate {
+			t.Errorf("dailyOpenDate expected '%s', got '%s'", dailyOpenDate, w.dailyOpenDate)
 		}
 	}
 

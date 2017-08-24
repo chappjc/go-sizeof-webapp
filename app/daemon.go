@@ -1,3 +1,5 @@
+// +build !windows
+
 package app
 
 import (
@@ -115,4 +117,15 @@ func printStatusErr(e error) {
 func printFailed(e error) {
 	fmt.Println("FAILED")
 	fmt.Println("Details:", e.Error())
+}
+
+// Notifies parent process that everything is OK.
+func notifyParentProcess() {
+	if err := syscall.Kill(os.Getppid(), syscall.SIGUSR1); err != nil {
+		appLog.Error(
+			"Notifying parent process FAILED, reason -> %s", err.Error(),
+		)
+	} else {
+		appLog.Info("Notifying parent process SUCCEED")
+	}
 }

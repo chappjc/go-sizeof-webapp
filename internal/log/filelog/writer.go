@@ -1,12 +1,11 @@
-/*
-	Package log/filelog implements advanced writer to log files
-	for "log4go" package with improved algorithm of log rotation.
-*/
+// Package filelog implements advanced writer to log files for "log4go" package
+// with improved algorithm of log rotation.
 package filelog
 
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,14 +14,14 @@ import (
 	"sync"
 	"time"
 
-	log "code.google.com/p/log4go"
+	log "github.com/alecthomas/log4go"
 )
 
 // Day format for comparing files changed time during daily log rotation.
 const dayFormat = "2006-01-02"
 
-// Represents log writer which writes logs into files.
-// It can rotate files and delete previously rotated but expired now logs.
+// Writer represents log writer which writes logs into files. It can rotate
+// files and delete previously rotated but expired now logs.
 type Writer struct {
 	// Channels to receive commands
 	rec chan *log.LogRecord
@@ -31,6 +30,7 @@ type Writer struct {
 	// The opened file
 	filename string
 	file     *os.File
+	writer   io.Writer
 
 	// The logging format
 	format string
@@ -40,14 +40,14 @@ type Writer struct {
 	// How long keep already rotated files (0 value means always)
 	keepRotatedSeconds time.Duration
 	// Rotate at linecount
-	maxlines          uint64
-	maxlines_curlines uint64
+	maxlines         uint64
+	maxlinesCurlines uint64
 	// Rotate at size
-	maxsize         uint64
-	maxsize_cursize uint64
+	maxsize        uint64
+	maxsizeCursize uint64
 	// Rotate daily
-	daily          bool
-	daily_opendate string
+	daily         bool
+	dailyOpenDate string
 	// Keep old log files (.001, .002, etc)
 	rotate bool
 
@@ -56,7 +56,7 @@ type Writer struct {
 	waiter      *sync.WaitGroup
 }
 
-// Initializes new log writer.
+// NewWriter initializes new log writer.
 func NewWriter(fName string, rotate bool) *Writer {
 	w := &Writer{
 		rec:      make(chan *log.LogRecord, log.LogBufferLength),
@@ -93,10 +93,10 @@ func NewWriter(fName string, rotate bool) *Writer {
 						return
 					}
 				}
-				if (w.maxlines > 0 && w.maxlines_curlines >= w.maxlines) ||
-					(w.maxsize > 0 && w.maxsize_cursize >= w.maxsize) ||
+				if (w.maxlines > 0 && w.maxlinesCurlines >= w.maxlines) ||
+					(w.maxsize > 0 && w.maxsizeCursize >= w.maxsize) ||
 					(w.daily &&
-						(time.Now().Format(dayFormat) != w.daily_opendate)) {
+						(time.Now().Format(dayFormat) != w.dailyOpenDate)) {
 					if err := w.doRotation(); err != nil {
 						printErr(err)
 						return
@@ -119,7 +119,7 @@ func (w *Writer) doRotation() (e error) {
 	if w.rotate {
 		err := os.Rename(w.filename, w.processAlreadyRotatedFiles())
 		if err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("rotation failed: %s\n", err)
+			return fmt.Errorf("rotation failed: %s", err)
 		}
 	}
 	if w.file != nil {
@@ -128,9 +128,8 @@ func (w *Writer) doRotation() (e error) {
 	return
 }
 
-// Helper function to process already rotated files.
-// It removes expired log files if any
-// and returns name of next file to rotate into.
+// Helper function to process already rotated files. It removes expired log
+// files if any and returns name of next file to rotate into.
 func (w *Writer) processAlreadyRotatedFiles() (fileNameForRotation string) {
 	dir := filepath.Dir(w.filename)
 	lastNum := 0
@@ -174,13 +173,14 @@ func (w *Writer) openNewFile() (e error) {
 		return
 	}
 	w.file = fd
+	w.writer = io.MultiWriter(fd, os.Stdout)
 	fi, e := fd.Stat()
 	if e != nil {
 		return
 	}
-	w.daily_opendate = fi.ModTime().Format(dayFormat)
-	w.maxsize_cursize = uint64(fi.Size())
-	if w.maxlines_curlines, e = func() (num uint64, _ error) {
+	w.dailyOpenDate = fi.ModTime().Format(dayFormat)
+	w.maxsizeCursize = uint64(fi.Size())
+	if w.maxlinesCurlines, e = func() (num uint64, _ error) {
 		scanner := bufio.NewScanner(w.file)
 		for scanner.Scan() {
 			num++
@@ -189,7 +189,7 @@ func (w *Writer) openNewFile() (e error) {
 	}(); e != nil {
 		return
 	}
-	fmt.Fprint(w.file,
+	fmt.Fprint(w.writer,
 		log.FormatLogRecord(w.header, &log.LogRecord{Created: time.Now()}),
 	)
 	return
@@ -200,37 +200,36 @@ func (w *Writer) closeCurrentFile() {
 	if w.file == nil {
 		return
 	}
-	fmt.Fprint(w.file,
+	fmt.Fprint(w.writer,
 		log.FormatLogRecord(w.trailer, &log.LogRecord{Created: time.Now()}),
 	)
-	w.file.Close()
+	if err := w.file.Close(); err != nil {
+		log.Stderrf("Failed to close file: %v", err)
+	}
 }
 
 // Helper function to write given log record into current opened file.
 //
 // Attention: File must be opened to avoid nil pointer failure!
 func (w *Writer) write(rec *log.LogRecord) (e error) {
-	n, e := fmt.Fprint(w.file, log.FormatLogRecord(w.format, rec))
+	n, e := fmt.Fprint(w.writer, log.FormatLogRecord(w.format, rec))
 	if e != nil {
 		return
 	}
-	w.maxlines_curlines++
-	w.maxsize_cursize += uint64(n)
+	w.maxlinesCurlines++
+	w.maxsizeCursize += uint64(n)
 	return
 }
 
-// Writes given log record into file.
-//
-// Implementation of log4go.LogWriter interface.
+// LogWrite writes given log record into file. Implementation of
+// log4go.LogWriter interface.
 func (w *Writer) LogWrite(rec *log.LogRecord) {
 	w.rec <- rec
 }
 
-// Closes current log writer and resources connected with it.
-// By default acts asynchronous, which means that method doesn't wait
-// log writer to be closed.
-// To change this behaviour you must use .SetWaitOnClose() method.
-//
+// Close closes current log writer and resources connected with it. By default
+// acts asynchronous, which means that method doesn't wait log writer to be
+// closed. To change this behaviour you must use .SetWaitOnClose() method.
 // Implementation of log4go.LogWriter interface.
 func (w *Writer) Close() {
 	close(w.rec)
@@ -239,68 +238,68 @@ func (w *Writer) Close() {
 	}
 }
 
-// Manual request for current log rotation.
+// Rotate requests current log rotation.
 func (w *Writer) Rotate() {
 	w.rot <- true
 }
 
-// Sets the logging format (chainable).
-// Must be called before the first log message is written.
+// SetFormat sets the logging format (chainable). Must be called before the
+// first log message is written.
 func (w *Writer) SetFormat(format string) *Writer {
 	w.format = format
 	return w
 }
 
-// Sets the log file header and footer (chainable).
-// Must be called before the first log message is written.
-// These are formatted similar to the log4go.FormatLogRecord
-// (e.g. you can use %D and %T in your header/footer for date and time).
+// SetHeadFoot sets the log file header and footer (chainable). Must be called
+// before the first log message is written. These are formatted similar to the
+// log4go.FormatLogRecord (e.g. you can use %D and %T in your header/footer for
+// date and time).
 func (w *Writer) SetHeadFoot(head, foot string) *Writer {
 	w.header, w.trailer = head, foot
 	return w
 }
 
-// Sets rotate at linecount (chainable).
-// Must be called before the first log message is written.
+// SetRotateLines sets rotate at linecount (chainable). Must be called before
+// the first log message is written.
 func (w *Writer) SetRotateLines(maxlines int) *Writer {
 	w.maxlines = uint64(maxlines)
 	return w
 }
 
-// Sets rotate at size (chainable).
-// Must be called before the first log message is written.
+// SetRotateSize sets rotate at size (chainable). Must be called before the
+// first log message is written.
 func (w *Writer) SetRotateSize(maxsize int) *Writer {
 	w.maxsize = uint64(maxsize)
 	return w
 }
 
-// Sets rotate daily (chainable).
-// Must be called before the first log message is written.
+// SetRotateDaily sets rotate daily (chainable). Must be called before the first
+// log message is written.
 func (w *Writer) SetRotateDaily(daily bool) *Writer {
 	w.daily = daily
 	return w
 }
 
-// Changes whether or not the old logs are kept (chainable).
-// Must be called before the first log message is written.
-// If rotate is false, the files are overwritten;
-// otherwise, they are rotated to another file before the new log is opened.
+// SetRotate changes whether or not the old logs are kept (chainable). Must be
+// called before the first log message is written. If rotate is false, the files
+// are overwritten; otherwise, they are rotated to another file before the new
+// log is opened.
 func (w *Writer) SetRotate(rotate bool) *Writer {
 	w.rotate = rotate
 	return w
 }
 
-// Sets duration (in seconds) of
-// how long already rotated files must be kept (chainable).
-// If is not set, then files will be kept always.
+// SetRotatedFilesExpiration sets duration (in seconds) of how long already
+// rotated files must be kept (chainable). If is not set, then files will be
+// kept always.
 func (w *Writer) SetRotatedFilesExpiration(seconds uint64) *Writer {
 	w.keepRotatedSeconds = time.Duration(seconds) * time.Second
 	return w
 }
 
-// Makes .Close() method to wait until Writer will be totally closed.
-// If is not set, by default is false,
-// which means .Close() method to act asynchronous.
+// SetWaitOnClose makes .Close() method to wait until Writer will be totally
+// closed. If is not set, by default is false, which means .Close() method to
+// act asynchronous.
 func (w *Writer) SetWaitOnClose(yes bool) *Writer {
 	w.waitOnClose = yes
 	return w

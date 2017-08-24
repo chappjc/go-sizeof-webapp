@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gophergala/golang-sizeof.tips/internal/parser"
+	"github.com/chappjc/golang-sizeof.tips/internal/parser"
 )
 
 const exampleCode = `// Sample code
