@@ -1,9 +1,7 @@
-Golang sizeof tips
+Golang `sizeof` tips
 ------------------
 
-**Web tool for interactive playing with Golang struct sizes.**
-
-Try online version [here](http://golang-sizeof.tips/).
+**Web tool for interactive playing with Golang struct sizes.**  Made by [Kai Ren](https://github.com/tyranron) for Gopher Gala 2015.
 
 ## Aim
 Provide comfortable tool to see how fields in struct are aligned,
@@ -11,16 +9,14 @@ to compare different structs and as the result - to understand
 and remember alignment rules.
 
 ## Installing
-To install correct versions of dependencies
-[Goop dependency manager](https://github.com/nitrous-io/goop) should be used.
+Use [`dep`](https://github.com/golang/dep) to install dependencies
 ```bash
-go get github.com/chappjc/golang-sizeof.tips
-cd github.com/chappjc/golang-sizeof.tips
-goop install
-goop go build -o ./server
+git clone https://github.com/chappjc/go-sizeof-webapp $GOPATH/src/chappjc/go-sizeof-webapp
+cd $GOPATH/src/chappjc/go-sizeof-webapp
+go get -u github.com/golang/dep/cmd/dep
+$GOPATH/bin/dep ensure
+go build # or go install
 ```
-You may also install via simple `go get` by your own risk.
-
 
 ## Usage
 ```bash
@@ -31,8 +27,7 @@ You may also install via simple `go get` by your own risk.
 
 ## Platform support
 Tested on Linux and OS X x64 platforms, but should work properly and on other
-*nix-like platforms.
-Windows is not supported due to daemonization.
+*nix-like platforms. Daemonization is disabled on Windows, but it works.
 
 ## License
 [Apache License 2.0](LICENSE)

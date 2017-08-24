@@ -16,7 +16,7 @@ import (
 
 // Setting up daemon properties.
 func init() {
-	daemon.AppName = "golang-sizeof.tips HTTP server"
+	daemon.AppName = "go-sizeof-webapp HTTP server"
 	daemon.PidFile = "logs/sizeof.pid"
 
 	httpPort := ""

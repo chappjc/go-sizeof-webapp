@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/chappjc/golang-sizeof.tips/app"
+	"github.com/chappjc/go-sizeof-webapp/app"
 )
 
 func main() {

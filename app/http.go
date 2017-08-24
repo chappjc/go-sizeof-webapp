@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/chappjc/golang-sizeof.tips/internal/bindata/static"
+	"github.com/chappjc/go-sizeof-webapp/internal/bindata/static"
 )
 
 func bindHttpHandlers() {

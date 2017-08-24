@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/chappjc/golang-sizeof.tips/internal/log"
+	"github.com/chappjc/go-sizeof-webapp/internal/log"
 )
 
 func init() {

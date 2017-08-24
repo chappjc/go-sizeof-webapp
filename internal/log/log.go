@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/chappjc/golang-sizeof.tips/internal/log/filelog"
+	"github.com/chappjc/go-sizeof-webapp/internal/log/filelog"
 
 	l4g "github.com/alecthomas/log4go"
 )

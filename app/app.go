@@ -1,6 +1,6 @@
 package app
 
-import "github.com/chappjc/golang-sizeof.tips/internal/log"
+import "github.com/chappjc/go-sizeof-webapp/internal/log"
 
 var appLog log.Logger
 

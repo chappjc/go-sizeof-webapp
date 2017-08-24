@@ -3,7 +3,7 @@ package app
 import (
 	"html/template"
 
-	bin "github.com/chappjc/golang-sizeof.tips/internal/bindata/templates"
+	bin "github.com/chappjc/go-sizeof-webapp/internal/bindata/templates"
 )
 
 const templatesDir = "templs/"
