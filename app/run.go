@@ -23,9 +23,10 @@ func Run() (exitCode int) {
 		return 1
 	}
 
-	httpPort := os.Getenv("GOHTTP")
-	if httpPort == "" {
-		httpPort = DefaultHttpPort
+	// Override any http flags with GOHTTP env var
+	httpPortEnv := os.Getenv("GOHTTP")
+	if httpPortEnv != "" {
+		httpPort = httpPortEnv
 	}
 
 	bindHttpHandlers()

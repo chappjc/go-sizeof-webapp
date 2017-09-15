@@ -16,15 +16,20 @@ import (
 
 // flag
 var nodaemon bool
+var httpPort string
 
 // Setting up daemon properties.
 func init() {
 	daemon.AppName = "go-sizeof-webapp HTTP server"
 	daemon.PidFile = "logs/sizeof.pid"
 
-	httpPort := ""
 	flag.StringVar(&httpPort, "http", DefaultHttpPort, "port to listen http reauests on")
 	flag.BoolVar(&nodaemon, "nodaemon", false, "do not start daemonized")
+	defer flag.Parse()
+
+	if nodaemon {
+		return
+	}
 
 	// Overwriting default daemonigo "start" action.
 	daemon.SetAction("start", func() {
@@ -58,8 +63,6 @@ func init() {
 		}
 		daemonStart(httpPort)
 	})
-
-	flag.Parse()
 }
 
 // Helper function for custom daemon starting.
