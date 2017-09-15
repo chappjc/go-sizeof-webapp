@@ -10,10 +10,6 @@ import (
 	"github.com/chappjc/go-sizeof-webapp/internal/log"
 )
 
-func init() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-}
-
 func Run() (exitCode int) {
 	var err error
 	appLog, err = log.NewApplicationLogger()
@@ -27,12 +23,13 @@ func Run() (exitCode int) {
 		return 1
 	}
 
-	httpPort := os.Getenv("_GO_HTTP")
+	httpPort := os.Getenv("GOHTTP")
 	if httpPort == "" {
 		httpPort = DefaultHttpPort
 	}
 
 	bindHttpHandlers()
+
 	canExit, httpErr := make(chan sig, 1), make(chan error, 1)
 	go func() {
 		defer close(canExit)
@@ -43,15 +40,22 @@ func Run() (exitCode int) {
 			)
 		}
 	}()
+
+	// let ListenAndServe try to bind
+	runtime.Gosched()
 	select {
 	case err = <-httpErr:
 		_ = appLog.Error(err.Error())
 		log.StdErr(err.Error())
 		return 1
-	case <-time.After(300 * time.Millisecond):
+	case <-time.After(30 * time.Millisecond):
 	}
 
-	notifyParentProcess()
+	appLog.Info("Listening on %v", httpPort)
+
+	if !nodaemon {
+		notifyParentProcess()
+	}
 
 	<-canExit
 	return

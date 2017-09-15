@@ -14,15 +14,17 @@ import (
 	daemon "github.com/tyranron/daemonigo"
 )
 
+// flag
+var nodaemon bool
+
 // Setting up daemon properties.
 func init() {
 	daemon.AppName = "go-sizeof-webapp HTTP server"
 	daemon.PidFile = "logs/sizeof.pid"
 
 	httpPort := ""
-	flag.StringVar(
-		&httpPort, "http", DefaultHttpPort, "port to listen http reauests on",
-	)
+	flag.StringVar(&httpPort, "http", DefaultHttpPort, "port to listen http reauests on")
+	flag.BoolVar(&nodaemon, "nodaemon", false, "do not start daemonized")
 
 	// Overwriting default daemonigo "start" action.
 	daemon.SetAction("start", func() {
@@ -56,12 +58,14 @@ func init() {
 		}
 		daemonStart(httpPort)
 	})
+
+	flag.Parse()
 }
 
 // Helper function for custom daemon starting.
 func daemonStart(port string) {
 	fmt.Printf("Starting %s...", daemon.AppName)
-	sig := make(chan os.Signal)
+	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGUSR1)
 	cmd, err := daemon.StartCommand()
 	if err != nil {
@@ -69,7 +73,7 @@ func daemonStart(port string) {
 		return
 	}
 	if port != "" {
-		cmd.Env = append(cmd.Env, "_GO_HTTP="+port)
+		cmd.Env = append(cmd.Env, "GOHTTP="+port)
 	}
 	stdErr, err := cmd.StderrPipe()
 	if err != nil {
