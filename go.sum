@@ -1,6 +1,10 @@
 github.com/alecthomas/log4go v0.0.0-20170422051248-18d87da5025a h1:Mua7YDXp1HJLbptks7HYzJ/9fthBDuKIQuosAkAa5p4=
 github.com/alecthomas/log4go v0.0.0-20170422051248-18d87da5025a/go.mod h1:iCVmQ9g4TfaRX5m5jq5sXY7RXYWPv9/PynM/GocbG3w=
+github.com/alecthomas/log4go v0.0.0-20180109082532-d146e6b86faa h1:0zdYOLyuQ3TWIgWNgEH+LnmZNMmkO1ze3wriQt093Mk=
+github.com/alecthomas/log4go v0.0.0-20180109082532-d146e6b86faa/go.mod h1:iCVmQ9g4TfaRX5m5jq5sXY7RXYWPv9/PynM/GocbG3w=
 github.com/elazarl/go-bindata-assetfs v1.0.0 h1:G/bYguwHIzWq9ZoyUQqrjTmJbbYn3j3CKKpKinvZLFk=
 github.com/elazarl/go-bindata-assetfs v1.0.0/go.mod h1:v+YaWX3bdea5J/mo8dSETolEo7R71Vk1u8bnjau5yw4=
+github.com/elazarl/go-bindata-assetfs v1.0.1-0.20180223160309-38087fe4dafb h1:Dnxl6iOR/3QQRcCBDEOCpusGgsx7uDS+Pa/InwqCFfw=
+github.com/elazarl/go-bindata-assetfs v1.0.1-0.20180223160309-38087fe4dafb/go.mod h1:v+YaWX3bdea5J/mo8dSETolEo7R71Vk1u8bnjau5yw4=
 github.com/tyranron/daemonigo v0.3.1 h1:kLt7oKl2AceLdPl6qaXOYQZM4ZZLhT9jWrZa02iq2PQ=
 github.com/tyranron/daemonigo v0.3.1/go.mod h1:tXUGvLFtBWBCpYfzgvLNuHZ4NhuwSjyNcs4gsXWZw8k=
